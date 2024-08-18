@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 const dbConnection = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URL);
     console.log("Db connection established");
   } catch (error) {
     console.log("DB error:" + error);
