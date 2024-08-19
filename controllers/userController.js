@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import sendMail from "../middlewares/sendMail.js";
+import { createJwt } from "../utils/index.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -10,7 +11,7 @@ export const registerUser = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user)
-      return res.status(400).json({
+      return res.status(401).json({
         message: "User Already Exists",
       });
 
@@ -22,7 +23,6 @@ export const registerUser = async (req, res) => {
       password: hashPassword,
     };
 
-    // const otp = Math.floor(Math.random() * 1000000);
     const otp = Math.floor(Math.random() * 1000000);
     console.log("otp", otp);
 
@@ -55,12 +55,10 @@ export const verifyUser = async (req, res) => {
   try {
     const { otp, activationToken } = req.body;
 
-    let jwtPayload = undefined;
     jwt.verify(
       activationToken,
       process.env.Activation_Secret,
       async (err, payload) => {
-        // console.log("payload", payload);
         try {
           if (!payload)
             return res.status(400).json({
@@ -85,18 +83,6 @@ export const verifyUser = async (req, res) => {
         }
       }
     );
-
-    // console.log("jwtPayload", jwtPayload);
-
-    // await User.create({
-    //   name: jwtPayload.user.name,
-    //   email: jwtPayload.user.email,
-    //   password: jwtPayload.user.password,
-    // });
-
-    // res.json({
-    //   message: "User Registered",
-    // });
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -111,29 +97,40 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user)
-      return res.status(400).json({
+      return res.status(401).json({
         message: "Invalid Credentials",
       });
+
+    if (!user.active) {
+      return res.status(401).json({
+        status: false,
+        message: "User account has been deactivated, contact the administrator",
+      });
+    }
 
     const matchPassword = await bcrypt.compare(password, user.password);
 
-    if (!matchPassword)
-      return res.status(400).json({
-        message: "Invalid Credentials",
-      });
-
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SEC, {
-      expiresIn: "15d", //15 days
-    });
-
-    res.json({
-      message: `welcome back ${user.name}`,
-      token,
-      user,
-    });
+    if (user && matchPassword) {
+      createJwt(res, user._id);
+      user.password = undefined;
+      return res.status(200).json(user);
+    } else {
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid credentials" });
+    }
   } catch (error) {
     res.status(500).json({
       message: error.message,
     });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  try {
+    res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
+    res.status(200).json({ message: "Logout successfull" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
   }
 };
