@@ -12,13 +12,14 @@ const dbConnection = async () => {
 export default dbConnection;
 
 export const createJwt = (res, userId) => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ userId }, process.env.Activation_Secret, {
     expiresIn: "1d",
   });
+  console.log(token);
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
-    secure: true,
+    // secure: false,
     partitioned: true,
     // to prevent CSRF attack
     sameSite: "none",

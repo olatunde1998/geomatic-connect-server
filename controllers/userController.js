@@ -109,7 +109,7 @@ export const loginUser = async (req, res) => {
     }
 
     const matchPassword = await bcrypt.compare(password, user.password);
-
+    console.log("user", user._id);
     if (user && matchPassword) {
       createJwt(res, user._id);
       user.password = undefined;
@@ -130,6 +130,40 @@ export const logoutUser = async (req, res) => {
   try {
     res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
     res.status(200).json({ message: "Logout successfull" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  console.log("userId", req.user);
+  const { userId } = req.user;
+  console.log("userId", userId);
+  try {
+    const { oldPassword, newPassword } = req.body;
+    // const user = await User.findById(req.user.id);
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        message: "Incorrect password",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
     return res.status(400).json({ status: false, message: error.message });
   }
