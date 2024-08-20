@@ -24,13 +24,13 @@ export const registerUser = async (req, res) => {
     };
 
     const otp = Math.floor(Math.random() * 1000000);
-    console.log("otp", otp);
+    // console.log("otp", otp);
 
     const activationToken = jwt.sign(
       { user, otp },
       process.env.Activation_Secret,
       {
-        expiresIn: "5m", // 5 minutes
+        expiresIn: "10m", // 5 minutes
       }
     );
 
@@ -109,7 +109,7 @@ export const loginUser = async (req, res) => {
     }
 
     const matchPassword = await bcrypt.compare(password, user.password);
-    console.log("user", user._id);
+    // console.log("user", user._id);
     if (user && matchPassword) {
       createJwt(res, user._id);
       user.password = undefined;
@@ -172,15 +172,13 @@ export const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    console.log("user", user);
+
     if (!user) {
       return res.status(404).json({
         message: "User not found",
       });
     }
     const newPassword = generateRandomPassword(6);
-    console.log("newPassword", newPassword);
-    console.log("type newPassword", typeof newPassword);
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
