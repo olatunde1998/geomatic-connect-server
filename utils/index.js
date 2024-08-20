@@ -26,3 +26,19 @@ export const createJwt = (res, userId) => {
     maxAge: 1 * 24 * 60 * 60 * 1000,
   });
 };
+
+export const generateRandomPassword = (length) => {
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const specialChars = "!@#$%^&*()_+";
+
+  const allChars = lowercase + uppercase + numbers + specialChars;
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * allChars.length);
+    password += allChars[randomIndex];
+  }
+
+  return password;
+};

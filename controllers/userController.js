@@ -2,7 +2,7 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import sendMail from "../middlewares/sendMail.js";
-import { createJwt } from "../utils/index.js";
+import { createJwt, generateRandomPassword } from "../utils/index.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -141,7 +141,6 @@ export const resetPassword = async (req, res) => {
   console.log("userId", userId);
   try {
     const { oldPassword, newPassword } = req.body;
-    // const user = await User.findById(req.user.id);
     const user = await User.findById(userId);
 
     if (!user) {
@@ -164,6 +163,40 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    console.log("user", user);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+    const newPassword = generateRandomPassword(6);
+    console.log("newPassword", newPassword);
+    console.log("type newPassword", typeof newPassword);
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    await sendMail(
+      email,
+      "New Password Code",
+      `Please Login to the app with your new password, Your Password is ${newPassword}`
+    );
+
+    res.status(200).json({
+      status: "Succesfull",
+      message: "Your new password is sent to your mail",
+    });
   } catch (error) {
     return res.status(400).json({ status: false, message: error.message });
   }

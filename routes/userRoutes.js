@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  forgetPassword,
   loginUser,
   logoutUser,
   registerUser,
@@ -14,6 +15,7 @@ router.post("/register", registerUser);
 router.post("/verify", verifyUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
+router.post("/forget-password", forgetPassword);
 
 router.put("/reset-password", protectedRoute, resetPassword);
 
