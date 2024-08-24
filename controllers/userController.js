@@ -2,7 +2,12 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import sendMail from "../middlewares/sendMail.js";
-import { createJwt, generateRandomPassword } from "../utils/index.js";
+import {
+  createJwt,
+  generateOTP,
+  generateRandomPassword,
+} from "../utils/index.js";
+import Otp from "../models/otp.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -23,14 +28,21 @@ export const registerUser = async (req, res) => {
       password: hashPassword,
     };
 
-    const otp = Math.floor(Math.random() * 1000000);
+    const otp = generateOTP();
     // console.log("otp", otp);
+    const newOtp = new Otp({
+      email,
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    await newOtp.save();
 
     const activationToken = jwt.sign(
       { user, otp },
       process.env.Activation_Secret,
       {
-        expiresIn: "10m", // 5 minutes
+        expiresIn: "10m", // 10 minutes
       }
     );
 
@@ -64,10 +76,14 @@ export const verifyUser = async (req, res) => {
             return res.status(400).json({
               message: "Otp expired",
             });
+
           if (payload.otp !== +otp)
             return res.status(400).json({
               message: "Wrong Otp",
             });
+
+          const otpDoc = await Otp.findOne({ email });
+          await otpDoc.deleteOne();
 
           const user = {
             name: payload.user.name,
@@ -136,9 +152,8 @@ export const logoutUser = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  console.log("userId", req.user);
   const { userId } = req.user;
-  console.log("userId", userId);
+
   try {
     const { oldPassword, newPassword } = req.body;
     const user = await User.findById(userId);
@@ -163,6 +178,52 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const existingOtp = await Otp.findOne({ email });
+
+    if (existingOtp) {
+      const now = new Date();
+      if (now > existingOtp.expiresAt) {
+        const newOtp = generateOTP();
+
+        await Otp.findOneAndUpdate(
+          { email },
+          { otp: newOtp, expiresAt: new Date(Date.now() + 10 * 60 * 1000) }
+        );
+
+        await sendMail(
+          email,
+          "Request for New Otp",
+          `Please Verify your Account using otp, Your New otp is ${newOtp}`
+        );
+
+        res.json({ message: "OTP resent successfully" });
+      } else {
+        const newOtp = generateOTP();
+
+        await Otp.findOneAndUpdate(
+          { email },
+          { otp: newOtp, expiresAt: new Date(Date.now() + 10 * 60 * 1000) }
+        );
+
+        await sendMail(
+          email,
+          "Request for New Otp",
+          `Please Verify your Account using otp, Your New otp is ${newOtp}`
+        );
+
+        res.json({ message: "OTP resent successfully" });
+      }
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
   } catch (error) {
     return res.status(400).json({ status: false, message: error.message });
   }

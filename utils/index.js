@@ -42,3 +42,8 @@ export const generateRandomPassword = (length) => {
 
   return password;
 };
+
+// Function to generate a random OTP
+export const generateOTP = () => {
+  return Math.floor(Math.random() * 1000000).toString();
+};
