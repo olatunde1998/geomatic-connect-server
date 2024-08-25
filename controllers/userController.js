@@ -40,7 +40,7 @@ export const registerUser = async (req, res) => {
 
     const activationToken = jwt.sign(
       { user, otp },
-      process.env.Activation_Secret,
+      process.env.ACTIVATION_SECRET,
       {
         expiresIn: "10m", // 10 minutes
       }
@@ -69,7 +69,7 @@ export const verifyUser = async (req, res) => {
 
     jwt.verify(
       activationToken,
-      process.env.Activation_Secret,
+      process.env.ACTIVATION_SECRET,
       async (err, payload) => {
         try {
           if (!payload)

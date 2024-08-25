@@ -7,9 +7,9 @@ const protectedRoute = async (req, res, next) => {
 
     console.log("req.cookies", req.cookies);
     console.log("token", token);
-    console.log("jwt_secret", process.env.Activation_Secret);
+    console.log("jwt_secret", process.env.ACTIVATION_SECRET);
     if (token) {
-      const decodedToken = jwt.verify(token, process.env.Activation_Secret);
+      const decodedToken = jwt.verify(token, process.env.ACTIVATION_SECRET);
       console.log("decodedToken", decodedToken);
       const resp = await User.findById(decodedToken.userId).select(
         "role email"

@@ -12,7 +12,7 @@ const dbConnection = async () => {
 export default dbConnection;
 
 export const createJwt = (res, userId) => {
-  const token = jwt.sign({ userId }, process.env.Activation_Secret, {
+  const token = jwt.sign({ userId }, process.env.ACTIVATION_SECRET, {
     expiresIn: "1d",
   });
   console.log(token);
