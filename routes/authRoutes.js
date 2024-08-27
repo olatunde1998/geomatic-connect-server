@@ -1,6 +1,7 @@
 import express from "express";
 import {
   forgetPassword,
+  getUserList,
   loginUser,
   logoutUser,
   registerUser,
