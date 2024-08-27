@@ -5,12 +5,12 @@ const protectedRoute = async (req, res, next) => {
   try {
     let token = req.cookies?.token;
 
-    console.log("req.cookies", req.cookies);
-    console.log("token", token);
-    console.log("jwt_secret", process.env.ACTIVATION_SECRET);
+    // console.log("req.cookies", req.cookies);
+    // console.log("token", token);
+    // console.log("jwt_secret", process.env.ACTIVATION_SECRET);
     if (token) {
       const decodedToken = jwt.verify(token, process.env.ACTIVATION_SECRET);
-      console.log("decodedToken", decodedToken);
+      // console.log("decodedToken", decodedToken);
       const resp = await User.findById(decodedToken.userId).select(
         "role email"
       );
@@ -35,4 +35,15 @@ const protectedRoute = async (req, res, next) => {
   }
 };
 
-export { protectedRoute };
+const isAdminRoute = (req, res, next) => {
+  if (req.user && req.user.role === "Admin") {
+    next();
+  } else {
+    return res.status(401).json({
+      status: false,
+      message: "Not authorized as admin. Try login as admin.",
+    });
+  }
+};
+
+export { protectedRoute, isAdminRoute };
