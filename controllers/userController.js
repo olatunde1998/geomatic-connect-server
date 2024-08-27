@@ -261,17 +261,4 @@ export const forgetPassword = async (req, res) => {
   }
 };
 
-export const getUserList = async (req, res) => {
-  try {
-    const users = await User.find({ role: { $ne: "Admin" } }).select(
-      "name email role active"
-    );
-    const response = {
-      Number: users.length,
-      users,
-    };
-    res.status(200).json(response);
-  } catch (error) {
-    return res.status(400).json({ status: false, message: error.message });
-  }
-};
+
