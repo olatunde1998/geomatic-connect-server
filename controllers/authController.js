@@ -261,4 +261,28 @@ export const forgetPassword = async (req, res) => {
   }
 };
 
+export const getMyProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.user;
 
+    const user = await User.findById(id).select(
+      role === "Company"
+        ? "name email ministry active state city LGA passport linkedin timestamps"
+        : role === "Student"
+        ? "name email active state city LGA sex DOB passport skills description linkedin github institution timestamps"
+        : "name email role sex timestamps" // Default fields for other roles
+    );
+
+    res.status(200).json(user);
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const updateMyProfile = async () => {
+  try {
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
