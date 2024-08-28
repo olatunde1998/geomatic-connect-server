@@ -4,13 +4,8 @@ import User from "../models/user.js";
 const protectedRoute = async (req, res, next) => {
   try {
     let token = req.cookies?.token;
-
-    // console.log("req.cookies", req.cookies);
-    // console.log("token", token);
-    // console.log("jwt_secret", process.env.ACTIVATION_SECRET);
     if (token) {
       const decodedToken = jwt.verify(token, process.env.ACTIVATION_SECRET);
-      // console.log("decodedToken", decodedToken);
       const resp = await User.findById(decodedToken.userId).select(
         "role email"
       );
