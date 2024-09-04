@@ -6,6 +6,7 @@ import cors from "cors";
 import dbConnection from "./utils/index.js";
 import { errorHandler, routeNotFound } from "./middlewares/errorMiddlewares.js";
 import routes from "./routes/index.js";
+import session from "express-session";
 
 dotenv.config();
 dbConnection();
@@ -25,6 +26,18 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(
+  session({
+    resave: false,
+    saveUninitialized: false,
+    secret: "sesion secret",
+  })
+);
+
+// app.use(passport.initialize());
+// app.use(passport.session());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

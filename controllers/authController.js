@@ -28,33 +28,15 @@ export const registerUser = async (req, res) => {
       password: hashPassword,
     };
 
-    const otp = generateOTP();
-    // console.log("otp", otp);
-    const newOtp = new Otp({
-      email,
-      otp,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-    });
-
-    await newOtp.save();
-
-    const activationToken = jwt.sign(
-      { user, otp },
-      process.env.ACTIVATION_SECRET,
-      {
-        expiresIn: "10m", // 10 minutes
-      }
-    );
-
-    await sendMail(
-      email,
-      "Email Verification Code",
-      `Please Verify your Account using otp, Your otp is ${otp}`
-    );
-
-    res.status(200).json({
-      message: "otp send to your mail",
-      activationToken,
+    const createdUser = await User.create(user);
+    res.status(201).json({
+      message: "User Registered",
+      user: {
+        _id: createdUser.id,
+        name: createdUser.name,
+        email: createdUser.email,
+        role: createdUser.role,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -268,13 +250,13 @@ export const getMyProfile = async (req, res) => {
 
     const user = await User.findById(id).select(
       role === "Company"
-        ? "name email ministry active state city LGA passport linkedin timestamps"
+        ? "name email ministry active state city LGA passport linkedin"
         : role === "Student"
-        ? "name email active state city LGA sex DOB passport skills description linkedin github institution timestamps"
-        : "name email role sex timestamps" // Default fields for other roles
+        ? "name email active state city LGA sex DOB passport skills description linkedin github institution"
+        : "name email role sex"
     );
-
-    res.status(200).json(user);
+    const creationDate = user.createdAt;
+    res.status(200).json({ user, creationDate });
   } catch (error) {
     return res.status(400).json({ status: false, message: error.message });
   }
